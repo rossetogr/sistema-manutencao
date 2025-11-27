@@ -1,0 +1,71 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+
+from database.db_setup import init_db, get_db_connection
+from services.sensor_service import simular_e_predizer
+from services.reporting_service import listar_predicoes, gerar_relatorio_desempenho, atualizar_ground_truth
+from utils.modelo_regressao import popular_dados_iniciais
+
+def menu_principal():
+    """Exibe o menu principal do sistema."""
+    print("\n" + "="*70)
+    print(" SISTEMA DE MANUTENÇÃO PREDITIVA (ML REGRESSÃO CLI)")
+    print("="*70)
+    print(" [1] Simular Nova Leitura de Sensor e Predizer RUL (Análise Operacional)")
+    print(" [2] Monitorar Previsões e Avaliar o Desempenho do Modelo (Análise de ML)")
+    print(" [0] Sair")
+    print("-" * 70)
+    return input("Escolha uma opção: ")
+
+def menu_monitoramento():
+    """Exibe o menu de monitoramento e relatórios."""
+    print("\n--- Monitoramento e Avaliação de ML ---")
+    print(" [1] Listar Últimas Previsões de RUL e Risco")
+    print(" [2] Gerar Relatório de Desempenho (MAE - Erro Absoluto Médio)")
+    print(" [3] Atualizar RUL Real (Ground Truth) após falha/manutenção")
+    print(" [0] Voltar ao Menu Principal")
+    print("-" * 65)
+    return input("Escolha uma opção: ")
+
+def main():
+    """Função principal do sistema."""
+    
+    init_db()
+
+    conn = get_db_connection()
+    if conn:
+        popular_dados_iniciais(conn) 
+        conn.close()
+
+    while True:
+        opcao_principal = menu_principal()
+
+        match opcao_principal:
+            case '1':
+                simular_e_predizer()
+        
+            case '2':
+                while True:
+                    match menu_monitoramento():
+                        case '1':
+                            listar_predicoes()
+                        case '2':
+                            gerar_relatorio_desempenho()
+                        case '3':
+                            atualizar_ground_truth()
+                        case '0':
+                            break
+                        case _:
+                            print("Opção inválida. Tente novamente.")
+
+            case '0':
+                print("\nObrigado por usar o Sistema de Manutenção Preditiva. Até mais!")
+                break
+            
+            case _:
+                print("Opção inválida. Tente novamente.")
+
+if __name__ == '__main__':
+    main()
